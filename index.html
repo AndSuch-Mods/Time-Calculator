@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Time Add/Subtract (Hours & Minutes)</title>
+  <title>Work Hours Calculator</title>
   <style>
     :root{
       --bg: #0b1220;
       --card: rgba(255,255,255,.06);
-      --card2: rgba(255,255,255,.10);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.65);
       --border: rgba(255,255,255,.14);
       --shadow: 0 18px 55px rgba(0,0,0,.45);
       --radius: 18px;
+      --ok: rgba(120, 255, 190, .85);
+      --warn: rgba(255, 205, 120, .92);
+      --bad: rgba(255, 120, 120, .90);
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -61,10 +63,10 @@
     }
     .grid{
       display:grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1.25fr .75fr;
       gap: 14px;
     }
-    @media (max-width: 860px){
+    @media (max-width: 900px){
       .grid{ grid-template-columns: 1fr; }
     }
     .card{
@@ -90,34 +92,45 @@
       font-size: 14px;
     }
     .body{ padding: 14px 16px 16px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-    .rowhead{
+    textarea{
+      width:100%;
+      min-height: 150px;
+      resize: vertical;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    textarea:focus{
+      border-color: rgba(160, 200, 255, .45);
+      box-shadow: 0 0 0 4px rgba(120, 160, 255, .12);
+    }
+
+    .row{
       display:grid;
-      grid-template-columns: 86px 1fr 1fr 44px;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      padding: 0 6px 8px;
-      color: var(--muted);
+      margin-top: 10px;
+    }
+    @media (max-width: 650px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    label{
+      display:block;
       font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
       letter-spacing:.25px;
       text-transform: uppercase;
     }
-    .rows{
-      display:grid;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .term{
-      display:grid;
-      grid-template-columns: 86px 1fr 1fr 44px;
-      gap: 10px;
-      align-items:center;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-    }
-
-    select, input[type="number"]{
+    input{
       width:100%;
       padding: 10px 10px;
       border-radius: 12px;
@@ -127,27 +140,10 @@
       outline: none;
       font-size: 14px;
     }
-    select:focus, input[type="number"]:focus{
+    input:focus{
       border-color: rgba(160, 200, 255, .45);
       box-shadow: 0 0 0 4px rgba(120, 160, 255, .12);
     }
-
-    .tinyBtn{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 16px;
-      display:grid;
-      place-items:center;
-      transition: transform .06s ease, background .12s ease;
-    }
-    .tinyBtn:hover{ background: rgba(255,255,255,.09); }
-    .tinyBtn:active{ transform: translateY(1px); }
 
     .controls{
       display:flex;
@@ -155,7 +151,7 @@
       gap: 10px;
       align-items:center;
       justify-content: space-between;
-      margin-top: 8px;
+      margin-top: 12px;
     }
     .btns{ display:flex; gap:10px; flex-wrap:wrap; }
     button{
@@ -191,15 +187,14 @@
       display:grid;
       gap: 10px;
     }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .result .big{
+    .big{
       font-size: clamp(26px, 3.4vw, 38px);
       font-weight: 780;
       letter-spacing: .6px;
       margin: 0;
       line-height: 1.1;
     }
-    .result .meta{
+    .meta{
       display:grid;
       gap: 8px;
       padding-top: 6px;
@@ -216,6 +211,27 @@
       color: var(--text);
       font-weight: 650;
     }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      width: fit-content;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--warn);
+    }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+
     .toast{
       display:none;
       margin-top: 8px;
@@ -224,9 +240,19 @@
     }
     .toast.show{ display:block; }
 
-    @media (max-width: 520px){
-      .rowhead, .term{ grid-template-columns: 78px 1fr 1fr 44px; }
+    .err{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,120,120,.35);
+      background: rgba(255, 90, 90, .10);
+      color: rgba(255,255,255,.82);
+      font-size: 12px;
+      line-height: 1.45;
+      display:none;
+      white-space: pre-wrap;
     }
+    .err.show{ display:block; }
   </style>
 </head>
 
@@ -234,56 +260,72 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>Time Calculator</h1>
-        <p class="sub">Add/subtract multiple hour/minute entries in one pass. Hours never roll into days.</p>
+        <h1>Work Hours Calculator</h1>
+        <p class="sub">Type one expression for all your adds/subtracts. Track progress to 40 hours and get a “leave at” time.</p>
       </div>
-      <div class="pill">Hours & Minutes only • GitHub Pages ready</div>
+      <div class="pill">Single box • Hours never convert to days</div>
     </header>
 
     <div class="grid">
-      <section class="card" aria-label="Inputs">
+      <section class="card" aria-label="Expression">
         <div class="hd">
-          <p class="title">Terms</p>
-          <span class="pill" id="termsCount">2 terms</span>
+          <p class="title">Expression</p>
+          <span class="pill">Examples: <span class="mono">8:00 + 7:30 - 0:30</span> • <span class="mono">8.00 + 7.30</span> • <span class="mono">8h + 30m</span></span>
         </div>
 
         <div class="body">
-          <div class="rowhead" aria-hidden="true">
-            <div>Op</div>
-            <div>Hours</div>
-            <div>Minutes</div>
-            <div></div>
-          </div>
+          <label for="expr">Enter time terms (separate with + / -). Semicolons/new lines also work.</label>
+          <textarea id="expr" class="mono" spellcheck="false">8:00 + 7:30 + 6:45 + 3:15</textarea>
 
-          <div class="rows" id="rows"></div>
+          <div class="row">
+            <div>
+              <label for="goal">Weekly goal (hours)</label>
+              <input id="goal" type="number" inputmode="decimal" step="0.25" value="40" />
+            </div>
+            <div>
+              <label for="clockIn">Clock-in time (optional)</label>
+              <input id="clockIn" placeholder="e.g., 13:30 or 1:30pm or 1.30p" />
+            </div>
+          </div>
 
           <div class="controls">
             <div class="btns">
-              <button class="primary" type="button" id="btnAddPlus">+ Add term</button>
-              <button type="button" id="btnAddMinus">− Add term</button>
+              <button class="primary" type="button" id="btnCalc">Calculate</button>
+              <button type="button" id="btnFillExample">Load example</button>
               <button class="danger" type="button" id="btnClear">Clear</button>
             </div>
             <p class="hint">
-              Minutes can be any number (e.g., 90). Result is normalized to <span class="mono">H:MM</span>.
+              Time formats accepted per term: <span class="mono">H:MM</span>, <span class="mono">H.MM</span> (two digits = minutes), <span class="mono">Nh</span>, <span class="mono">Nm</span>.
+              Numbers alone mean hours (e.g., <span class="mono">2</span> = 2 hours).
             </p>
           </div>
+
+          <div class="err" id="errBox"></div>
         </div>
       </section>
 
-      <aside class="card" aria-label="Result">
+      <aside class="card" aria-label="Results">
         <div class="hd">
-          <p class="title">Result</p>
+          <p class="title">Results</p>
           <div class="btns">
-            <button type="button" id="btnCopy">Copy</button>
+            <button type="button" id="btnCopy">Copy summary</button>
           </div>
         </div>
 
         <div class="result">
-          <p class="big mono" id="resultMain">0:00</p>
+          <div class="badge" id="statusBadge"><span class="dot" id="statusDot"></span><span id="statusText">On track</span></div>
+
+          <div>
+            <div class="kv"><span>Total worked</span><b class="mono" id="workedHM">0:00</b></div>
+            <div class="kv"><span>Remaining to goal</span><b class="mono" id="remainingHM">0:00</b></div>
+          </div>
+
+          <p class="big mono" id="headline">0:00 remaining</p>
 
           <div class="meta">
-            <div class="kv"><span>Signed H:MM</span><b class="mono" id="resultSigned">+0:00</b></div>
-            <div class="kv"><span>Total minutes</span><b class="mono" id="resultMinutes">0</b></div>
+            <div class="kv"><span>Worked minutes</span><b class="mono" id="workedMin">0</b></div>
+            <div class="kv"><span>Goal minutes</span><b class="mono" id="goalMin">2400</b></div>
+            <div class="kv"><span>Clock out at (if clock-in set)</span><b class="mono" id="leaveAt">—</b></div>
           </div>
 
           <div class="toast" id="toast">Copied.</div>
@@ -295,33 +337,32 @@
 <script>
   const el = (id) => document.getElementById(id);
 
-  const rowsEl = el("rows");
-  const termsCountEl = el("termsCount");
+  const exprEl = el("expr");
+  const goalEl = el("goal");
+  const clockInEl = el("clockIn");
+  const errBox = el("errBox");
 
   const out = {
-    main: el("resultMain"),
-    signed: el("resultSigned"),
-    mins: el("resultMinutes"),
-    toast: el("toast"),
+    workedHM: el("workedHM"),
+    remainingHM: el("remainingHM"),
+    headline: el("headline"),
+    workedMin: el("workedMin"),
+    goalMin: el("goalMin"),
+    leaveAt: el("leaveAt"),
+    statusDot: el("statusDot"),
+    statusText: el("statusText"),
+    statusBadge: el("statusBadge"),
+    toast: el("toast")
   };
 
-  const btnAddPlus = el("btnAddPlus");
-  const btnAddMinus = el("btnAddMinus");
-  const btnClear = el("btnClear");
+  const btnCalc = el("btnCalc");
   const btnCopy = el("btnCopy");
+  const btnClear = el("btnClear");
+  const btnFillExample = el("btnFillExample");
 
-  let state = [
-    { op: "+", hours: 0, minutes: 0 },
-    { op: "+", hours: 0, minutes: 0 },
-  ];
-
-  function n(v){
-    const x = Number(v);
-    return Number.isFinite(x) ? x : 0;
-  }
   function pad2(x){ return String(x).padStart(2, "0"); }
 
-  function normalizeToHM(totalMinutes){
+  function normalizeHM(totalMinutes){
     const sign = totalMinutes < 0 ? -1 : 1;
     let abs = Math.abs(Math.trunc(totalMinutes));
     const hours = Math.floor(abs / 60);
@@ -329,121 +370,267 @@
     return { sign, hours, minutes };
   }
 
-  function formatHM(parts){
-    // Non-day format: hours can be 0..∞
-    return `${parts.hours}:${pad2(parts.minutes)}`;
+  function formatHM(totalMinutes){
+    const p = normalizeHM(totalMinutes);
+    const s = `${p.hours}:${pad2(p.minutes)}`;
+    return (p.sign < 0 ? "−" : "") + s;
   }
 
-  function compute(){
+  function parseDurationToken(tok){
+    // Returns minutes (non-negative). Throw on invalid.
+    let t = tok.trim().toLowerCase();
+    if (!t) throw new Error("Empty token");
+
+    // Allow leading + or - here, but caller should typically handle sign.
+    if (t[0] === "+") t = t.slice(1).trim();
+    if (t[0] === "−" || t[0] === "-") t = t.slice(1).trim();
+
+    // "7h30m" or "7h" or "30m"
+    const hmCompact = t.match(/^(\d+)\s*h\s*(\d+)\s*m$/);
+    if (hmCompact) return (parseInt(hmCompact[1], 10) * 60) + parseInt(hmCompact[2], 10);
+
+    const hOnly = t.match(/^(\d+)\s*h$/);
+    if (hOnly) return parseInt(hOnly[1], 10) * 60;
+
+    const mOnly = t.match(/^(\d+)\s*m$/);
+    if (mOnly) return parseInt(mOnly[1], 10);
+
+    // H:MM
+    const colon = t.match(/^(\d+)\s*:\s*(\d{1,2})$/);
+    if (colon){
+      const h = parseInt(colon[1], 10);
+      const m = parseInt(colon[2], 10);
+      if (m >= 60) throw new Error(`Minutes must be 0–59 in "${tok}"`);
+      return (h * 60) + m;
+    }
+
+    // H.MM
+    const dot = t.match(/^(\d+)\s*\.\s*(\d{1,4})$/);
+    if (dot){
+      const h = parseInt(dot[1], 10);
+      const frac = dot[2];
+
+      // If exactly two digits and looks like minutes, interpret as minutes (1.30 = 1h30m)
+      if (frac.length === 2){
+        const m = parseInt(frac, 10);
+        if (m <= 59) return (h * 60) + m;
+      }
+
+      // Otherwise treat as decimal hours (1.5 = 1h30m)
+      const dec = Number(`${dot[1]}.${dot[2]}`);
+      if (!Number.isFinite(dec)) throw new Error(`Invalid number "${tok}"`);
+      return Math.round(dec * 60);
+    }
+
+    // Plain number => hours
+    const num = t.match(/^\d+(\.\d+)?$/);
+    if (num){
+      const v = Number(t);
+      if (!Number.isFinite(v)) throw new Error(`Invalid number "${tok}"`);
+      return Math.round(v * 60);
+    }
+
+    throw new Error(`Could not parse "${tok}"`);
+  }
+
+  function parseExpressionToMinutes(expression){
+    // Support separators: whitespace, semicolon, newline, comma
+    // Operators: +, -, and also allow tokens like "-0:30"
+    const raw = expression || "";
+    const cleaned = raw
+      .replace(/[,\n\r;]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleaned) return { total: 0, errors: [] };
+
+    const tokens = cleaned.split(" ").filter(Boolean);
+    let sign = +1;
     let total = 0;
-    for (const t of state){
-      const h = Math.trunc(n(t.hours));
-      const m = Math.trunc(n(t.minutes));
-      const termMinutes = (h * 60) + m;
-      total += (t.op === "-" ? -1 : 1) * termMinutes;
+    const errors = [];
+
+    for (const tok of tokens){
+      if (tok === "+"){
+        sign = +1;
+        continue;
+      }
+      if (tok === "-" || tok === "−"){
+        sign = -1;
+        continue;
+      }
+
+      // Leading sign in token overrides current sign for this token only (common typing style).
+      let localSign = sign;
+      if (tok[0] === "+") localSign = +1;
+      if (tok[0] === "-" || tok[0] === "−") localSign = -1;
+
+      try{
+        const mins = parseDurationToken(tok);
+        total += localSign * mins;
+        // After consuming a token, revert to default + unless user types another operator.
+        sign = +1;
+      }catch(e){
+        errors.push(`• ${e.message}`);
+        // Keep going, but do not change total.
+        sign = +1;
+      }
     }
 
-    const parts = normalizeToHM(total);
-    out.main.textContent = formatHM(parts);
-
-    const signChar = parts.sign < 0 ? "−" : "+";
-    out.signed.textContent = `${signChar}${formatHM(parts)}`;
-    out.mins.textContent = String(Math.trunc(total));
-
-    termsCountEl.textContent = `${state.length} term${state.length === 1 ? "" : "s"}`;
+    return { total, errors };
   }
 
-  function render(){
-    rowsEl.innerHTML = "";
-    state.forEach((t, idx) => {
-      const row = document.createElement("div");
-      row.className = "term";
+  function parseClockInToMinutes(str){
+    // Returns minutes since midnight, or null if empty.
+    const s0 = (str || "").trim();
+    if (!s0) return null;
 
-      const op = document.createElement("select");
-      op.setAttribute("aria-label", `Operator for term ${idx+1}`);
-      op.innerHTML = `
-        <option value="+">+</option>
-        <option value="-">-</option>
-      `;
-      op.value = t.op;
-      op.addEventListener("change", () => {
-        state[idx].op = op.value;
-        compute();
-      });
+    let s = s0.toLowerCase().trim();
+    s = s.replace(/\s+/g, "");
+    // Accept 1.30p, 1.30pm, 1:30pm, 1330, 13:30, etc.
+    let isPM = false, isAM = false;
+    if (s.endsWith("pm")) { isPM = true; s = s.slice(0, -2); }
+    else if (s.endsWith("am")) { isAM = true; s = s.slice(0, -2); }
+    else if (s.endsWith("p")) { isPM = true; s = s.slice(0, -1); }
+    else if (s.endsWith("a")) { isAM = true; s = s.slice(0, -1); }
 
-      const hours = document.createElement("input");
-      hours.type = "number";
-      hours.inputMode = "numeric";
-      hours.step = "1";
-      hours.value = t.hours;
-      hours.placeholder = "Hours";
-      hours.setAttribute("aria-label", `Hours for term ${idx+1}`);
-      hours.addEventListener("input", () => {
-        state[idx].hours = hours.value;
-        compute();
-      });
+    // Convert dot time to colon time if present (1.30 -> 1:30)
+    s = s.replace(".", ":");
 
-      const mins = document.createElement("input");
-      mins.type = "number";
-      mins.inputMode = "numeric";
-      mins.step = "1";
-      mins.value = t.minutes;
-      mins.placeholder = "Minutes";
-      mins.setAttribute("aria-label", `Minutes for term ${idx+1}`);
-      mins.addEventListener("input", () => {
-        state[idx].minutes = mins.value;
-        compute();
-      });
+    let h, m;
 
-      const del = document.createElement("button");
-      del.className = "tinyBtn";
-      del.type = "button";
-      del.textContent = "×";
-      del.title = "Remove term";
-      del.setAttribute("aria-label", `Remove term ${idx+1}`);
-      del.disabled = state.length <= 1;
-      del.style.opacity = del.disabled ? "0.45" : "1";
-      del.style.cursor = del.disabled ? "not-allowed" : "pointer";
-      del.addEventListener("click", () => {
-        if (state.length <= 1) return;
-        state.splice(idx, 1);
-        render();
-        compute();
-      });
-
-      row.append(op, hours, mins, del);
-      rowsEl.appendChild(row);
-    });
-
-    termsCountEl.textContent = `${state.length} term${state.length === 1 ? "" : "s"}`;
-  }
-
-  function addTerm(op){
-    state.push({ op, hours: 0, minutes: 0 });
-    render();
-    compute();
-    // focus the new hours input
-    const lastRow = rowsEl.lastElementChild;
-    if (lastRow){
-      const inputs = lastRow.querySelectorAll("input");
-      if (inputs[0]) inputs[0].focus();
+    // 3-4 digits like 1330 or 930
+    if (/^\d{3,4}$/.test(s)){
+      const digits = s;
+      const mm = parseInt(digits.slice(-2), 10);
+      const hh = parseInt(digits.slice(0, -2), 10);
+      if (mm >= 60) throw new Error(`Clock-in minutes must be 0–59 ("${str}")`);
+      h = hh; m = mm;
+    } else {
+      const match = s.match(/^(\d{1,2}):(\d{1,2})$/);
+      if (!match) throw new Error(`Clock-in time not recognized ("${str}")`);
+      h = parseInt(match[1], 10);
+      m = parseInt(match[2], 10);
+      if (m >= 60) throw new Error(`Clock-in minutes must be 0–59 ("${str}")`);
     }
+
+    if (h > 23) {
+      // If user typed 1:30pm without suffix, this still could be OK, but >23 is invalid.
+      throw new Error(`Clock-in hours must be 0–23 ("${str}")`);
+    }
+
+    // Apply AM/PM if provided
+    if (isPM || isAM){
+      if (h < 1 || h > 12) throw new Error(`Use 1–12 for am/pm times ("${str}")`);
+      if (isPM && h !== 12) h += 12;
+      if (isAM && h === 12) h = 0;
+    }
+
+    return (h * 60) + m;
   }
 
-  function clearAll(){
-    state = [{ op: "+", hours: 0, minutes: 0 }, { op: "+", hours: 0, minutes: 0 }];
-    render();
-    compute();
+  function formatTimeOfDay(minutesSinceMidnight){
+    // returns "HH:MM (h:MMam/pm) [+Nd]" when needed
+    const dayOffset = Math.floor(minutesSinceMidnight / 1440);
+    let mm = ((minutesSinceMidnight % 1440) + 1440) % 1440;
+
+    const hh24 = Math.floor(mm / 60);
+    const mi = mm % 60;
+
+    // 12-hour
+    const suffix = hh24 >= 12 ? "pm" : "am";
+    let hh12 = hh24 % 12;
+    if (hh12 === 0) hh12 = 12;
+
+    const base24 = `${pad2(hh24)}:${pad2(mi)}`;
+    const base12 = `${hh12}:${pad2(mi)}${suffix}`;
+    return dayOffset > 0 ? `${base24} (${base12}) +${dayOffset}d` : `${base24} (${base12})`;
   }
 
-  async function copyResult(){
-    const text = `${out.signed.textContent} (${out.mins.textContent} minutes)`;
+  function setError(msg){
+    if (!msg){
+      errBox.classList.remove("show");
+      errBox.textContent = "";
+      return;
+    }
+    errBox.textContent = msg;
+    errBox.classList.add("show");
+  }
+
+  function setStatus(remainingMinutes){
+    // remainingMinutes = goal - worked
+    if (remainingMinutes <= 0){
+      out.statusDot.className = "dot ok";
+      out.statusText.textContent = "Goal met";
+      return;
+    }
+    // Arbitrary “warning” threshold: still remaining
+    out.statusDot.className = "dot";
+    out.statusText.textContent = "In progress";
+  }
+
+  function calculate(){
+    setError(null);
+
+    const expr = exprEl.value;
+    const { total: workedMinutes, errors } = parseExpressionToMinutes(expr);
+
+    // Goal hours -> minutes
+    const goalHours = Number(goalEl.value);
+    const goalMinutes = Number.isFinite(goalHours) ? Math.round(goalHours * 60) : 40 * 60;
+
+    const remaining = goalMinutes - workedMinutes;
+
+    out.workedHM.textContent = formatHM(workedMinutes).replace(/^−/, "−"); // keep minus symbol
+    out.remainingHM.textContent = formatHM(remaining);
+    out.workedMin.textContent = String(Math.trunc(workedMinutes));
+    out.goalMin.textContent = String(Math.trunc(goalMinutes));
+
+    setStatus(remaining);
+
+    if (remaining > 0){
+      out.headline.textContent = `${formatHM(remaining)} remaining`;
+    } else if (remaining === 0){
+      out.headline.textContent = `0:00 remaining`;
+    } else {
+      out.headline.textContent = `${formatHM(-remaining)} over`;
+    }
+
+    // Clock out time
+    let leaveAt = "—";
     try{
-      await navigator.clipboard.writeText(text);
+      const clockIn = parseClockInToMinutes(clockInEl.value);
+      if (clockIn !== null){
+        if (remaining <= 0){
+          leaveAt = "Already met";
+        } else {
+          leaveAt = formatTimeOfDay(clockIn + remaining);
+        }
+      }
+    }catch(e){
+      // show as non-fatal in error box
+      errors.push(`• ${e.message}`);
+    }
+    out.leaveAt.textContent = leaveAt;
+
+    if (errors.length){
+      setError("Some entries couldn’t be parsed:\n" + errors.join("\n"));
+    } else {
+      setError(null);
+    }
+  }
+
+  async function copySummary(){
+    const summary =
+`Worked: ${out.workedHM.textContent} (${out.workedMin.textContent} min)
+Remaining to goal: ${out.remainingHM.textContent}
+Clock out at: ${out.leaveAt.textContent}`;
+
+    try{
+      await navigator.clipboard.writeText(summary);
       showToast("Copied.");
     }catch{
       const ta = document.createElement("textarea");
-      ta.value = text;
+      ta.value = summary;
       ta.style.position = "fixed";
       ta.style.left = "-9999px";
       document.body.appendChild(ta);
@@ -459,29 +646,40 @@
     out.toast.textContent = msg;
     out.toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => out.toast.classList.remove("show"), 1200);
+    toastTimer = setTimeout(()=> out.toast.classList.remove("show"), 1200);
   }
 
-  // Buttons
-  btnAddPlus.addEventListener("click", () => addTerm("+"));
-  btnAddMinus.addEventListener("click", () => addTerm("-"));
-  btnClear.addEventListener("click", clearAll);
-  btnCopy.addEventListener("click", copyResult);
+  btnCalc.addEventListener("click", calculate);
+  btnCopy.addEventListener("click", copySummary);
+  btnClear.addEventListener("click", () => {
+    exprEl.value = "";
+    clockInEl.value = "";
+    goalEl.value = "40";
+    calculate();
+  });
+  btnFillExample.addEventListener("click", () => {
+    exprEl.value = "8:00 + 7:30 + 6:45 + 3:15 - 0:30";
+    clockInEl.value = "1:30pm";
+    goalEl.value = "40";
+    calculate();
+  });
 
-  // Keyboard: Enter adds a plus term when inside any input
+  // Auto-calc on input
+  [exprEl, goalEl, clockInEl].forEach(x => x.addEventListener("input", () => {
+    // Avoid recalcing on every keystroke in big textarea if you prefer:
+    // but keeping it responsive is usually fine.
+    calculate();
+  }));
+
+  // Ctrl/Cmd+Enter to calculate
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const tag = (document.activeElement && document.activeElement.tagName) || "";
-      if (tag === "INPUT" || tag === "SELECT") {
-        e.preventDefault();
-        addTerm("+");
-      }
-    }
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (mod && e.key === "Enter") calculate();
   });
 
   // Init
-  render();
-  compute();
+  calculate();
 </script>
 </body>
 </html>
