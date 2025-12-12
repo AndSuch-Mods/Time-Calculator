@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Time Add/Subtract</title>
+  <title>Time Add/Subtract (Hours & Minutes)</title>
   <style>
     :root{
       --bg: #0b1220;
@@ -20,7 +20,7 @@
     body{
       margin:0;
       color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       background:
         radial-gradient(1200px 600px at 20% 10%, rgba(120, 90, 255, .25), transparent 60%),
         radial-gradient(900px 500px at 85% 25%, rgba(0, 220, 255, .18), transparent 60%),
@@ -61,7 +61,7 @@
     }
     .grid{
       display:grid;
-      grid-template-columns: 1.15fr .85fr;
+      grid-template-columns: 1.2fr .8fr;
       gap: 14px;
     }
     @media (max-width: 860px){
@@ -90,49 +90,34 @@
       font-size: 14px;
     }
     .body{ padding: 14px 16px 16px; }
-    .row{
+
+    .rowhead{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    @media (max-width: 520px){
-      .row{ grid-template-columns: 1fr; }
-    }
-    .fieldset{
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-      padding: 12px;
-    }
-    .legend{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 10px;
-    }
-    .legend span{
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .inputs{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: 86px 1fr 1fr 44px;
       gap: 10px;
-    }
-    @media (max-width: 520px){
-      .inputs{ grid-template-columns: repeat(2, 1fr); }
-    }
-    label{
-      display:block;
-      font-size: 11px;
+      padding: 0 6px 8px;
       color: var(--muted);
-      margin-bottom: 6px;
+      font-size: 11px;
       letter-spacing:.25px;
       text-transform: uppercase;
     }
-    input[type="number"]{
+    .rows{
+      display:grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .term{
+      display:grid;
+      grid-template-columns: 86px 1fr 1fr 44px;
+      gap: 10px;
+      align-items:center;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+
+    select, input[type="number"]{
       width:100%;
       padding: 10px 10px;
       border-radius: 12px;
@@ -142,17 +127,35 @@
       outline: none;
       font-size: 14px;
     }
-    input[type="number"]:focus{
+    select:focus, input[type="number"]:focus{
       border-color: rgba(160, 200, 255, .45);
       box-shadow: 0 0 0 4px rgba(120, 160, 255, .12);
     }
+
+    .tinyBtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 16px;
+      display:grid;
+      place-items:center;
+      transition: transform .06s ease, background .12s ease;
+    }
+    .tinyBtn:hover{ background: rgba(255,255,255,.09); }
+    .tinyBtn:active{ transform: translateY(1px); }
+
     .controls{
       display:flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items:center;
       justify-content: space-between;
-      margin-top: 12px;
+      margin-top: 8px;
     }
     .btns{ display:flex; gap:10px; flex-wrap:wrap; }
     button{
@@ -162,7 +165,7 @@
       padding: 10px 12px;
       border-radius: 14px;
       cursor:pointer;
-      font-weight: 600;
+      font-weight: 650;
       letter-spacing:.15px;
       transition: transform .06s ease, background .12s ease, border-color .12s ease;
     }
@@ -182,14 +185,16 @@
       line-height: 1.5;
       margin: 0;
     }
+
     .result{
       padding: 16px;
       display:grid;
       gap: 10px;
     }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .result .big{
       font-size: clamp(26px, 3.4vw, 38px);
-      font-weight: 750;
+      font-weight: 780;
       letter-spacing: .6px;
       margin: 0;
       line-height: 1.1;
@@ -218,91 +223,49 @@
       color: rgba(255,255,255,.75);
     }
     .toast.show{ display:block; }
-    footer{
-      margin-top: 14px;
-      color: rgba(255,255,255,.55);
-      font-size: 12px;
-      text-align:center;
+
+    @media (max-width: 520px){
+      .rowhead, .term{ grid-template-columns: 78px 1fr 1fr 44px; }
     }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
       <div>
         <h1>Time Calculator</h1>
-        <p class="sub">Add or subtract two durations with proper carry/borrow. Copy the result with one click.</p>
+        <p class="sub">Add/subtract multiple hour/minute entries in one pass. Hours never roll into days.</p>
       </div>
-      <div class="pill">GitHub Pages ready • single-file</div>
+      <div class="pill">Hours & Minutes only • GitHub Pages ready</div>
     </header>
 
     <div class="grid">
       <section class="card" aria-label="Inputs">
         <div class="hd">
-          <p class="title">Inputs</p>
-          <span class="pill" id="modePill">Mode: Add</span>
+          <p class="title">Terms</p>
+          <span class="pill" id="termsCount">2 terms</span>
         </div>
-        <div class="body">
-          <div class="row">
-            <div class="fieldset">
-              <div class="legend">
-                <strong class="title">A</strong>
-                <span>Duration</span>
-              </div>
-              <div class="inputs">
-                <div>
-                  <label for="aDays">Days</label>
-                  <input id="aDays" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="aHours">Hours</label>
-                  <input id="aHours" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="aMins">Minutes</label>
-                  <input id="aMins" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="aSecs">Seconds</label>
-                  <input id="aSecs" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-              </div>
-            </div>
 
-            <div class="fieldset">
-              <div class="legend">
-                <strong class="title">B</strong>
-                <span>Duration</span>
-              </div>
-              <div class="inputs">
-                <div>
-                  <label for="bDays">Days</label>
-                  <input id="bDays" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="bHours">Hours</label>
-                  <input id="bHours" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="bMins">Minutes</label>
-                  <input id="bMins" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-                <div>
-                  <label for="bSecs">Seconds</label>
-                  <input id="bSecs" type="number" inputmode="numeric" min="0" step="1" value="0">
-                </div>
-              </div>
-            </div>
+        <div class="body">
+          <div class="rowhead" aria-hidden="true">
+            <div>Op</div>
+            <div>Hours</div>
+            <div>Minutes</div>
+            <div></div>
           </div>
+
+          <div class="rows" id="rows"></div>
 
           <div class="controls">
             <div class="btns">
-              <button class="primary" id="btnAdd" type="button">Add (A + B)</button>
-              <button id="btnSub" type="button">Subtract (A − B)</button>
-              <button class="danger" id="btnClear" type="button">Clear</button>
+              <button class="primary" type="button" id="btnAddPlus">+ Add term</button>
+              <button type="button" id="btnAddMinus">− Add term</button>
+              <button class="danger" type="button" id="btnClear">Clear</button>
             </div>
-            <p class="hint">Tip: press <span class="mono">Enter</span> to recalc. Supports negative results on subtraction.</p>
+            <p class="hint">
+              Minutes can be any number (e.g., 90). Result is normalized to <span class="mono">H:MM</span>.
+            </p>
           </div>
         </div>
       </section>
@@ -311,130 +274,174 @@
         <div class="hd">
           <p class="title">Result</p>
           <div class="btns">
-            <button id="btnCopy" type="button">Copy</button>
+            <button type="button" id="btnCopy">Copy</button>
           </div>
         </div>
+
         <div class="result">
-          <p class="big mono" id="resultMain">00:00:00</p>
+          <p class="big mono" id="resultMain">0:00</p>
 
           <div class="meta">
-            <div class="kv"><span>Signed (D HH:MM:SS)</span><b class="mono" id="resultSigned">+0d 00:00:00</b></div>
-            <div class="kv"><span>Total seconds</span><b class="mono" id="resultSeconds">0</b></div>
-            <div class="kv"><span>Operation</span><b id="resultOp">A + B</b></div>
+            <div class="kv"><span>Signed H:MM</span><b class="mono" id="resultSigned">+0:00</b></div>
+            <div class="kv"><span>Total minutes</span><b class="mono" id="resultMinutes">0</b></div>
           </div>
 
           <div class="toast" id="toast">Copied.</div>
         </div>
       </aside>
     </div>
-
-    <footer>
-      Built for quick hosting on GitHub Pages. No external dependencies.
-    </footer>
   </div>
 
 <script>
   const el = (id) => document.getElementById(id);
 
-  const fields = {
-    aDays: el("aDays"), aHours: el("aHours"), aMins: el("aMins"), aSecs: el("aSecs"),
-    bDays: el("bDays"), bHours: el("bHours"), bMins: el("bMins"), bSecs: el("bSecs"),
-  };
+  const rowsEl = el("rows");
+  const termsCountEl = el("termsCount");
 
   const out = {
     main: el("resultMain"),
     signed: el("resultSigned"),
-    secs: el("resultSeconds"),
-    op: el("resultOp"),
-    pill: el("modePill"),
-    toast: el("toast")
+    mins: el("resultMinutes"),
+    toast: el("toast"),
   };
 
-  const buttons = {
-    add: el("btnAdd"),
-    sub: el("btnSub"),
-    clear: el("btnClear"),
-    copy: el("btnCopy")
-  };
+  const btnAddPlus = el("btnAddPlus");
+  const btnAddMinus = el("btnAddMinus");
+  const btnClear = el("btnClear");
+  const btnCopy = el("btnCopy");
 
-  let mode = "add"; // "add" | "sub"
+  let state = [
+    { op: "+", hours: 0, minutes: 0 },
+    { op: "+", hours: 0, minutes: 0 },
+  ];
 
   function n(v){
     const x = Number(v);
     return Number.isFinite(x) ? x : 0;
   }
-
-  function durationToSeconds(d, h, m, s){
-    // Accepts any non-negative integers; treat negatives as 0 for inputs
-    d = Math.max(0, Math.trunc(n(d)));
-    h = Math.max(0, Math.trunc(n(h)));
-    m = Math.max(0, Math.trunc(n(m)));
-    s = Math.max(0, Math.trunc(n(s)));
-    return (((d * 24 + h) * 60 + m) * 60 + s);
-  }
-
   function pad2(x){ return String(x).padStart(2, "0"); }
 
-  function secondsToParts(totalSeconds){
-    const sign = totalSeconds < 0 ? -1 : 1;
-    let abs = Math.abs(Math.trunc(totalSeconds));
-
-    const days = Math.floor(abs / 86400); abs -= days * 86400;
-    const hours = Math.floor(abs / 3600); abs -= hours * 3600;
-    const mins = Math.floor(abs / 60); abs -= mins * 60;
-    const secs = abs;
-
-    return { sign, days, hours, mins, secs };
+  function normalizeToHM(totalMinutes){
+    const sign = totalMinutes < 0 ? -1 : 1;
+    let abs = Math.abs(Math.trunc(totalMinutes));
+    const hours = Math.floor(abs / 60);
+    const minutes = abs % 60;
+    return { sign, hours, minutes };
   }
 
-  function formatMain(parts){
-    // Main view: show days if non-zero, else HH:MM:SS
-    const hh = pad2(parts.hours);
-    const mm = pad2(parts.mins);
-    const ss = pad2(parts.secs);
-    const base = `${hh}:${mm}:${ss}`;
-    if (parts.days > 0) return `${parts.days}d ${base}`;
-    return base;
-  }
-
-  function formatSigned(parts){
-    const signChar = parts.sign < 0 ? "−" : "+";
-    return `${signChar}${parts.days}d ${pad2(parts.hours)}:${pad2(parts.mins)}:${pad2(parts.secs)}`;
+  function formatHM(parts){
+    // Non-day format: hours can be 0..∞
+    return `${parts.hours}:${pad2(parts.minutes)}`;
   }
 
   function compute(){
-    const a = durationToSeconds(fields.aDays.value, fields.aHours.value, fields.aMins.value, fields.aSecs.value);
-    const b = durationToSeconds(fields.bDays.value, fields.bHours.value, fields.bMins.value, fields.bSecs.value);
+    let total = 0;
+    for (const t of state){
+      const h = Math.trunc(n(t.hours));
+      const m = Math.trunc(n(t.minutes));
+      const termMinutes = (h * 60) + m;
+      total += (t.op === "-" ? -1 : 1) * termMinutes;
+    }
 
-    const total = (mode === "add") ? (a + b) : (a - b);
-    const parts = secondsToParts(total);
+    const parts = normalizeToHM(total);
+    out.main.textContent = formatHM(parts);
 
-    out.main.textContent = formatMain(parts);
-    out.signed.textContent = formatSigned(parts);
-    out.secs.textContent = String(Math.trunc(total));
-    out.op.textContent = mode === "add" ? "A + B" : "A − B";
-    out.pill.textContent = "Mode: " + (mode === "add" ? "Add" : "Subtract");
+    const signChar = parts.sign < 0 ? "−" : "+";
+    out.signed.textContent = `${signChar}${formatHM(parts)}`;
+    out.mins.textContent = String(Math.trunc(total));
+
+    termsCountEl.textContent = `${state.length} term${state.length === 1 ? "" : "s"}`;
   }
 
-  function setMode(next){
-    mode = next;
-    buttons.add.classList.toggle("primary", mode === "add");
-    buttons.sub.classList.toggle("primary", mode === "sub");
+  function render(){
+    rowsEl.innerHTML = "";
+    state.forEach((t, idx) => {
+      const row = document.createElement("div");
+      row.className = "term";
+
+      const op = document.createElement("select");
+      op.setAttribute("aria-label", `Operator for term ${idx+1}`);
+      op.innerHTML = `
+        <option value="+">+</option>
+        <option value="-">-</option>
+      `;
+      op.value = t.op;
+      op.addEventListener("change", () => {
+        state[idx].op = op.value;
+        compute();
+      });
+
+      const hours = document.createElement("input");
+      hours.type = "number";
+      hours.inputMode = "numeric";
+      hours.step = "1";
+      hours.value = t.hours;
+      hours.placeholder = "Hours";
+      hours.setAttribute("aria-label", `Hours for term ${idx+1}`);
+      hours.addEventListener("input", () => {
+        state[idx].hours = hours.value;
+        compute();
+      });
+
+      const mins = document.createElement("input");
+      mins.type = "number";
+      mins.inputMode = "numeric";
+      mins.step = "1";
+      mins.value = t.minutes;
+      mins.placeholder = "Minutes";
+      mins.setAttribute("aria-label", `Minutes for term ${idx+1}`);
+      mins.addEventListener("input", () => {
+        state[idx].minutes = mins.value;
+        compute();
+      });
+
+      const del = document.createElement("button");
+      del.className = "tinyBtn";
+      del.type = "button";
+      del.textContent = "×";
+      del.title = "Remove term";
+      del.setAttribute("aria-label", `Remove term ${idx+1}`);
+      del.disabled = state.length <= 1;
+      del.style.opacity = del.disabled ? "0.45" : "1";
+      del.style.cursor = del.disabled ? "not-allowed" : "pointer";
+      del.addEventListener("click", () => {
+        if (state.length <= 1) return;
+        state.splice(idx, 1);
+        render();
+        compute();
+      });
+
+      row.append(op, hours, mins, del);
+      rowsEl.appendChild(row);
+    });
+
+    termsCountEl.textContent = `${state.length} term${state.length === 1 ? "" : "s"}`;
+  }
+
+  function addTerm(op){
+    state.push({ op, hours: 0, minutes: 0 });
+    render();
     compute();
+    // focus the new hours input
+    const lastRow = rowsEl.lastElementChild;
+    if (lastRow){
+      const inputs = lastRow.querySelectorAll("input");
+      if (inputs[0]) inputs[0].focus();
+    }
   }
 
   function clearAll(){
-    Object.values(fields).forEach(i => i.value = 0);
-    setMode("add");
+    state = [{ op: "+", hours: 0, minutes: 0 }, { op: "+", hours: 0, minutes: 0 }];
+    render();
+    compute();
   }
 
   async function copyResult(){
-    const text = `${out.signed.textContent} (${out.secs.textContent} seconds)`;
+    const text = `${out.signed.textContent} (${out.mins.textContent} minutes)`;
     try{
       await navigator.clipboard.writeText(text);
       showToast("Copied.");
     }catch{
-      // Fallback
       const ta = document.createElement("textarea");
       ta.value = text;
       ta.style.position = "fixed";
@@ -452,24 +459,29 @@
     out.toast.textContent = msg;
     out.toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> out.toast.classList.remove("show"), 1200);
+    toastTimer = setTimeout(() => out.toast.classList.remove("show"), 1200);
   }
 
-  // Events
-  buttons.add.addEventListener("click", ()=> setMode("add"));
-  buttons.sub.addEventListener("click", ()=> setMode("sub"));
-  buttons.clear.addEventListener("click", clearAll);
-  buttons.copy.addEventListener("click", copyResult);
+  // Buttons
+  btnAddPlus.addEventListener("click", () => addTerm("+"));
+  btnAddMinus.addEventListener("click", () => addTerm("-"));
+  btnClear.addEventListener("click", clearAll);
+  btnCopy.addEventListener("click", copyResult);
 
-  Object.values(fields).forEach(input => {
-    input.addEventListener("input", compute);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") compute();
-    });
+  // Keyboard: Enter adds a plus term when inside any input
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      if (tag === "INPUT" || tag === "SELECT") {
+        e.preventDefault();
+        addTerm("+");
+      }
+    }
   });
 
   // Init
-  setMode("add");
+  render();
+  compute();
 </script>
 </body>
 </html>
