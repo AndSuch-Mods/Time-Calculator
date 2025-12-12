@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Time Add/Subtract</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --border: rgba(255,255,255,.14);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(120, 90, 255, .25), transparent 60%),
+        radial-gradient(900px 500px at 85% 25%, rgba(0, 220, 255, .18), transparent 60%),
+        radial-gradient(900px 600px at 45% 85%, rgba(255, 170, 0, .10), transparent 55%),
+        linear-gradient(180deg, #071020 0%, #050814 100%);
+      display:grid;
+      place-items:center;
+      padding: 28px 16px;
+    }
+    .wrap{ width:min(980px, 100%); }
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:14px;
+    }
+    h1{
+      font-size: clamp(20px, 3vw, 28px);
+      margin:0;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .pill{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+    .card{
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), transparent);
+    }
+    .title{
+      font-weight: 650;
+      letter-spacing:.2px;
+      margin:0;
+      font-size: 14px;
+    }
+    .body{ padding: 14px 16px 16px; }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+    .fieldset{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      padding: 12px;
+    }
+    .legend{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .legend span{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .inputs{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 520px){
+      .inputs{ grid-template-columns: repeat(2, 1fr); }
+    }
+    label{
+      display:block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing:.25px;
+      text-transform: uppercase;
+    }
+    input[type="number"]{
+      width:100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+    }
+    input[type="number"]:focus{
+      border-color: rgba(160, 200, 255, .45);
+      box-shadow: 0 0 0 4px rgba(120, 160, 255, .12);
+    }
+    .controls{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items:center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+    button{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing:.15px;
+      transition: transform .06s ease, background .12s ease, border-color .12s ease;
+    }
+    button:hover{ background: rgba(255,255,255,.09); }
+    button:active{ transform: translateY(1px); }
+    .primary{
+      background: linear-gradient(180deg, rgba(120, 140, 255, .35), rgba(120, 140, 255, .12));
+      border-color: rgba(140, 160, 255, .45);
+    }
+    .danger{
+      background: linear-gradient(180deg, rgba(255, 90, 90, .30), rgba(255, 90, 90, .10));
+      border-color: rgba(255, 120, 120, .45);
+    }
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .result{
+      padding: 16px;
+      display:grid;
+      gap: 10px;
+    }
+    .result .big{
+      font-size: clamp(26px, 3.4vw, 38px);
+      font-weight: 750;
+      letter-spacing: .6px;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .result .meta{
+      display:grid;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(255,255,255,.18);
+    }
+    .kv{
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .kv b{
+      color: var(--text);
+      font-weight: 650;
+    }
+    .toast{
+      display:none;
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+    }
+    .toast.show{ display:block; }
+    footer{
+      margin-top: 14px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      text-align:center;
+    }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Time Calculator</h1>
+        <p class="sub">Add or subtract two durations with proper carry/borrow. Copy the result with one click.</p>
+      </div>
+      <div class="pill">GitHub Pages ready • single-file</div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-label="Inputs">
+        <div class="hd">
+          <p class="title">Inputs</p>
+          <span class="pill" id="modePill">Mode: Add</span>
+        </div>
+        <div class="body">
+          <div class="row">
+            <div class="fieldset">
+              <div class="legend">
+                <strong class="title">A</strong>
+                <span>Duration</span>
+              </div>
+              <div class="inputs">
+                <div>
+                  <label for="aDays">Days</label>
+                  <input id="aDays" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="aHours">Hours</label>
+                  <input id="aHours" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="aMins">Minutes</label>
+                  <input id="aMins" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="aSecs">Seconds</label>
+                  <input id="aSecs" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+              </div>
+            </div>
+
+            <div class="fieldset">
+              <div class="legend">
+                <strong class="title">B</strong>
+                <span>Duration</span>
+              </div>
+              <div class="inputs">
+                <div>
+                  <label for="bDays">Days</label>
+                  <input id="bDays" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="bHours">Hours</label>
+                  <input id="bHours" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="bMins">Minutes</label>
+                  <input id="bMins" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+                <div>
+                  <label for="bSecs">Seconds</label>
+                  <input id="bSecs" type="number" inputmode="numeric" min="0" step="1" value="0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="primary" id="btnAdd" type="button">Add (A + B)</button>
+              <button id="btnSub" type="button">Subtract (A − B)</button>
+              <button class="danger" id="btnClear" type="button">Clear</button>
+            </div>
+            <p class="hint">Tip: press <span class="mono">Enter</span> to recalc. Supports negative results on subtraction.</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card" aria-label="Result">
+        <div class="hd">
+          <p class="title">Result</p>
+          <div class="btns">
+            <button id="btnCopy" type="button">Copy</button>
+          </div>
+        </div>
+        <div class="result">
+          <p class="big mono" id="resultMain">00:00:00</p>
+
+          <div class="meta">
+            <div class="kv"><span>Signed (D HH:MM:SS)</span><b class="mono" id="resultSigned">+0d 00:00:00</b></div>
+            <div class="kv"><span>Total seconds</span><b class="mono" id="resultSeconds">0</b></div>
+            <div class="kv"><span>Operation</span><b id="resultOp">A + B</b></div>
+          </div>
+
+          <div class="toast" id="toast">Copied.</div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      Built for quick hosting on GitHub Pages. No external dependencies.
+    </footer>
+  </div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+
+  const fields = {
+    aDays: el("aDays"), aHours: el("aHours"), aMins: el("aMins"), aSecs: el("aSecs"),
+    bDays: el("bDays"), bHours: el("bHours"), bMins: el("bMins"), bSecs: el("bSecs"),
+  };
+
+  const out = {
+    main: el("resultMain"),
+    signed: el("resultSigned"),
+    secs: el("resultSeconds"),
+    op: el("resultOp"),
+    pill: el("modePill"),
+    toast: el("toast")
+  };
+
+  const buttons = {
+    add: el("btnAdd"),
+    sub: el("btnSub"),
+    clear: el("btnClear"),
+    copy: el("btnCopy")
+  };
+
+  let mode = "add"; // "add" | "sub"
+
+  function n(v){
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  }
+
+  function durationToSeconds(d, h, m, s){
+    // Accepts any non-negative integers; treat negatives as 0 for inputs
+    d = Math.max(0, Math.trunc(n(d)));
+    h = Math.max(0, Math.trunc(n(h)));
+    m = Math.max(0, Math.trunc(n(m)));
+    s = Math.max(0, Math.trunc(n(s)));
+    return (((d * 24 + h) * 60 + m) * 60 + s);
+  }
+
+  function pad2(x){ return String(x).padStart(2, "0"); }
+
+  function secondsToParts(totalSeconds){
+    const sign = totalSeconds < 0 ? -1 : 1;
+    let abs = Math.abs(Math.trunc(totalSeconds));
+
+    const days = Math.floor(abs / 86400); abs -= days * 86400;
+    const hours = Math.floor(abs / 3600); abs -= hours * 3600;
+    const mins = Math.floor(abs / 60); abs -= mins * 60;
+    const secs = abs;
+
+    return { sign, days, hours, mins, secs };
+  }
+
+  function formatMain(parts){
+    // Main view: show days if non-zero, else HH:MM:SS
+    const hh = pad2(parts.hours);
+    const mm = pad2(parts.mins);
+    const ss = pad2(parts.secs);
+    const base = `${hh}:${mm}:${ss}`;
+    if (parts.days > 0) return `${parts.days}d ${base}`;
+    return base;
+  }
+
+  function formatSigned(parts){
+    const signChar = parts.sign < 0 ? "−" : "+";
+    return `${signChar}${parts.days}d ${pad2(parts.hours)}:${pad2(parts.mins)}:${pad2(parts.secs)}`;
+  }
+
+  function compute(){
+    const a = durationToSeconds(fields.aDays.value, fields.aHours.value, fields.aMins.value, fields.aSecs.value);
+    const b = durationToSeconds(fields.bDays.value, fields.bHours.value, fields.bMins.value, fields.bSecs.value);
+
+    const total = (mode === "add") ? (a + b) : (a - b);
+    const parts = secondsToParts(total);
+
+    out.main.textContent = formatMain(parts);
+    out.signed.textContent = formatSigned(parts);
+    out.secs.textContent = String(Math.trunc(total));
+    out.op.textContent = mode === "add" ? "A + B" : "A − B";
+    out.pill.textContent = "Mode: " + (mode === "add" ? "Add" : "Subtract");
+  }
+
+  function setMode(next){
+    mode = next;
+    buttons.add.classList.toggle("primary", mode === "add");
+    buttons.sub.classList.toggle("primary", mode === "sub");
+    compute();
+  }
+
+  function clearAll(){
+    Object.values(fields).forEach(i => i.value = 0);
+    setMode("add");
+  }
+
+  async function copyResult(){
+    const text = `${out.signed.textContent} (${out.secs.textContent} seconds)`;
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast("Copied.");
+    }catch{
+      // Fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      showToast("Copied.");
+    }
+  }
+
+  let toastTimer = null;
+  function showToast(msg){
+    out.toast.textContent = msg;
+    out.toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> out.toast.classList.remove("show"), 1200);
+  }
+
+  // Events
+  buttons.add.addEventListener("click", ()=> setMode("add"));
+  buttons.sub.addEventListener("click", ()=> setMode("sub"));
+  buttons.clear.addEventListener("click", clearAll);
+  buttons.copy.addEventListener("click", copyResult);
+
+  Object.values(fields).forEach(input => {
+    input.addEventListener("input", compute);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  // Init
+  setMode("add");
+</script>
+</body>
+</html>
